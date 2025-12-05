@@ -374,16 +374,28 @@ if uploaded_file is not None:
                 
                 result_df = pd.DataFrame(results)
 
+                # Create a two-column layout for the download buttons
+                col1, col2 = st.columns(2)
+                
                 for index, row in result_df.iterrows():
-                    with st.expander(f"📁 {row['URL']}"):
-                        st.download_button(
-                            label=f"Download {row['FileName']}",
-                            data=row['GeneratedHTML'],
-                            file_name=row['FileName'],
-                            mime='text/html',
-                        )
-                        with st.container():
-                            st.code(row['GeneratedHTML'], language='html')
+                    if index % 2 == 0:
+                        with col1:
+                            st.download_button(
+                                label=f"Download {row['FileName']}",
+                                data=row['GeneratedHTML'],
+                                file_name=row['FileName'],
+                                mime='text/html',
+                                use_container_width=True
+                            )
+                    else:
+                        with col2:
+                            st.download_button(
+                                label=f"Download {row['FileName']}",
+                                data=row['GeneratedHTML'],
+                                file_name=row['FileName'],
+                                mime='text/html',
+                                use_container_width=True
+                            )
                 
                 # Provide a separate download for the summary CSV
                 csv_summary = result_df[['URL', 'Title', 'Logo']].to_csv(index=False).encode('utf-8')
