@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>%title%</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #444444;
+            line-height: 1.6;
+            background-color: #ffffff;
+            padding-top: 85px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 60px;
+        }
+
+        header {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(229, 229, 229, 0.5);
+            padding: 24px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        header.header-hidden {
+            transform: translateY(-100%);
+        }
+
+        /* Scroll Reveal Animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111111;
+            text-decoration: none;
+            letter-spacing: 0.5px;
+			width: 30px;
+			height: 30px;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 48px;
+            align-items: center;
+        }
+
+        nav a {
+            color: #444444;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 400;
+            transition: opacity 0.2s ease;
+        }
+
+        nav a:hover {
+            opacity: 0.6;
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #ffffff;
+            border: 1px solid #e5e5e5;
+            min-width: 220px;
+            margin-top: 12px;
+        }
+
+        .dropdown-content.active {
+            display: block;
+        }
+
+        .dropdown-content a {
+            display: block;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .dropdown-content a:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #111111;
+        }
+
+        .section-hero {
+            padding: 120px 0;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 120px;
+            align-items: center;
+        }
+
+        .hero-content h1 {
+            font-size: 72px;
+            font-weight: 600;
+            line-height: 1.1;
+            color: #111111;
+            margin-bottom: 32px;
+            letter-spacing: -1px;
+        }
+
+        .hero-content p {
+            font-size: 20px;
+            line-height: 1.7;
+            color: #444444;
+            margin-bottom: 48px;
+        }
+
+        .hero-image {
+            width: 100%;
+            height: 600px;
+            background: linear-gradient(135deg, #e5e5e5 0%, #f0f0f0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999999;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background-color: #0d1b2a;
+            color: #ffffff;
+            padding: 18px 40px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            display: inline-block;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.85;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: #111111;
+            padding: 18px 40px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            border: 1px solid #111111;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            opacity: 0.6;
+        }
+
+        .section-intro-blocks {
+            padding: 120px 0;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .intro-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 80px;
+        }
+
+        .intro-block h3 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #111111;
+            margin-bottom: 20px;
+            letter-spacing: -0.3px;
+        }
+
+        .intro-block p {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #444444;
+        }
+
+        .section-services {
+            padding: 120px 0;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .section-title {
+            margin-bottom: 80px;
+        }
+
+        .section-title h2 {
+            font-size: 56px;
+            font-weight: 600;
+            color: #111111;
+            margin-bottom: 24px;
+            letter-spacing: -0.8px;
+        }
+
+        .section-title p {
+            font-size: 20px;
+            line-height: 1.6;
+            color: #444444;
+            max-width: 700px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background-color: #e5e5e5;
+            border: 1px solid #e5e5e5;
+        }
+
+        .service-card {
+            background-color: #ffffff;
+            padding: 60px;
+        }
+
+        .service-icon {
+            width: 48px;
+            height: 48px;
+            background-color: #111111;
+            margin-bottom: 32px;
+        }
+
+        .service-card h3 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #111111;
+            margin-bottom: 16px;
+            letter-spacing: -0.3px;
+        }
+
+        .service-card p {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #444444;
+        }
+
+        .section-image-showcase {
+            padding: 120px 0;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 100px;
+            align-items: center;
+        }
+
+        .showcase-image {
+            width: 100%;
+            height: 700px;
+            background: linear-gradient(135deg, #e5e5e5 0%, #f0f0f0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999999;
+            font-size: 14px;
+        }
+
+        .showcase-content h2 {
+            font-size: 48px;
+            font-weight: 600;
+            color: #111111;
+            margin-bottom: 32px;
+            letter-spacing: -0.6px;
+        }
+
+        .showcase-content p {
+            font-size: 18px;
+            line-height: 1.7;
+            color: #444444;
+            margin-bottom: 24px;
+        }
+
+        .section-stats {
+            padding: 120px 0;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background-color: #e5e5e5;
+            border: 1px solid #e5e5e5;
+        }
+
+        .stat-item {
+            background-color: #ffffff;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 64px;
+            font-weight: 600;
+            color: #111111;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .stat-label {
+            font-size: 15px;
+            color: #444444;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section-testimonials {
+            padding: 120px 0;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 80px;
+            margin-top: 80px;
+        }
+
+        .testimonial-card {
+            background-color: #ffffff;
+            padding: 60px;
+            border: 1px solid #e5e5e5;
+        }
+
+        .testimonial-text {
+            font-size: 20px;
+            line-height: 1.7;
+            color: #111111;
+            margin-bottom: 40px;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding-top: 32px;
+            border-top: 1px solid #e5e5e5;
+        }
+
+        .author-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e5e5e5 0%, #f0f0f0 100%);
+        }
+
+        .author-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111111;
+            margin-bottom: 4px;
+        }
+
+        .author-info p {
+            font-size: 14px;
+            color: #444444;
+        }
+
+        .section-cta-final {
+            padding: 120px 0;
+            text-align: center;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .cta-final-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-final-content h2 {
+            font-size: 56px;
+            font-weight: 600;
+            color: #111111;
+            margin-bottom: 32px;
+            letter-spacing: -0.8px;
+        }
+
+        .cta-final-content p {
+            font-size: 20px;
+            line-height: 1.6;
+            color: #444444;
+            margin-bottom: 48px;
+        }
+
+        footer {
+            background-color: #111111;
+            color: #ffffff;
+            padding: 100px 0 60px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 80px;
+            margin-bottom: 80px;
+            padding-bottom: 60px;
+            border-bottom: 1px solid #333333;
+        }
+
+        .footer-column h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .footer-column p {
+            font-size: 15px;
+            line-height: 1.7;
+            color: #999999;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 12px;
+        }
+
+        .footer-column a {
+            color: #999999;
+            text-decoration: none;
+            font-size: 15px;
+            transition: opacity 0.2s ease;
+        }
+
+        .footer-column a:hover {
+            opacity: 0.6;
+        }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-bottom p {
+            font-size: 13px;
+            color: #666666;
+            max-width: 600px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 32px;
+        }
+
+        .footer-links a {
+            font-size: 13px;
+            color: #666666;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            opacity: 0.6;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                padding: 0 40px;
+            }
+
+            .hero-content h1 {
+                font-size: 56px;
+            }
+
+            .section-title h2 {
+                font-size: 48px;
+            }
+
+            .showcase-content h2 {
+                font-size: 40px;
+            }
+
+            .cta-final-content h2 {
+                font-size: 48px;
+            }
+
+            .stat-number {
+                font-size: 48px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 24px;
+            }
+
+            nav ul {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background-color: #ffffff;
+                border-bottom: 1px solid #e5e5e5;
+                padding: 24px;
+                gap: 20px;
+            }
+
+            nav ul.active {
+                display: flex;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .section-hero {
+                padding: 80px 0;
+            }
+
+            .hero-grid {
+                grid-template-columns: 1fr;
+                gap: 60px;
+            }
+
+            .hero-content h1 {
+                font-size: 42px;
+            }
+
+            .hero-content p {
+                font-size: 18px;
+            }
+
+            .hero-image {
+                height: 400px;
+            }
+
+            .section-intro-blocks {
+                padding: 80px 0;
+            }
+
+            .intro-grid {
+                grid-template-columns: 1fr;
+                gap: 60px;
+            }
+
+            .section-services {
+                padding: 80px 0;
+            }
+
+            .section-title {
+                margin-bottom: 60px;
+            }
+
+            .section-title h2 {
+                font-size: 36px;
+            }
+
+            .section-title p {
+                font-size: 18px;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .service-card {
+                padding: 40px;
+            }
+
+            .section-image-showcase {
+                padding: 80px 0;
+            }
+
+            .showcase-grid {
+                grid-template-columns: 1fr;
+                gap: 60px;
+            }
+
+            .showcase-image {
+                height: 400px;
+            }
+
+            .showcase-content h2 {
+                font-size: 32px;
+            }
+
+            .section-stats {
+                padding: 80px 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stat-item {
+                padding: 40px 24px;
+            }
+
+            .stat-number {
+                font-size: 42px;
+            }
+
+            .section-testimonials {
+                padding: 80px 0;
+            }
+
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                margin-top: 60px;
+            }
+
+            .testimonial-card {
+                padding: 40px;
+            }
+
+            .testimonial-text {
+                font-size: 18px;
+            }
+
+            .section-cta-final {
+                padding: 80px 0;
+            }
+
+            .cta-final-content h2 {
+                font-size: 36px;
+            }
+
+            .cta-final-content p {
+                font-size: 18px;
+            }
+
+            footer {
+                padding: 80px 0 40px;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                margin-bottom: 60px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 24px;
+                text-align: center;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            %header_logo%
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">%header_mobile_menu_toggle%</button>
+            <nav>
+                <ul id="navMenu">
+                    <li><a href="#about">%header_nav_menu_about%</a></li>
+                    <li class="dropdown">
+                        <a href="#services" id="servicesDropdown">%header_nav_menu_services%</a>
+                        <div class="dropdown-content" id="servicesDropdownContent">
+                            <a href="#">%services_section_service1_title%</a>
+                            <a href="#">%services_section_service2_title%</a>
+                            <a href="#">%services_section_service3_title%</a>
+                            <a href="#">%services_section_service4_title%</a>
+                        </div>
+                    </li>
+                    <li><a href="#process">%header_nav_menu_process%</a></li>
+                    <li><a href="#contact">%header_nav_menu_contact%</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="section-hero" id="section-hero">
+        <div class="container">
+            <div class="hero-grid">
+                <div class="hero-content">
+                    <h1>%hero_section_headline%</h1>
+                    <p>%hero_section_subheadline%</p>
+                    <a href="#" class="btn-primary">%hero_section_cta_buttons_primary%</a>
+                </div>
+                <div class="hero-image"><img src="%about_section_image_placeholder%" alt="Hero Image"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-intro-blocks" id="section-intro-blocks">
+        <div class="container">
+            <div class="intro-grid">
+                <div class="intro-block">
+                    <h3>%about_section_headline%</h3>
+                    <p>%about_section_paragraph_1%</p>
+                </div>
+                <div class="intro-block">
+                    <h3>%about_section_commitment_headline%</h3>
+                    <p>%about_section_paragraph_2%</p>
+                </div>
+                <div class="intro-block">
+                    <h3>%about_section_expertise_headline%</h3>
+                    <p>%about_section_expertise_paragraph_1%</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-services" id="section-services">
+        <div class="container">
+            <div class="section-title">
+                <h2>%services_section_headline%</h2>
+                <p>%services_section_description%</p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon"></div>
+                    <h3>%services_section_service1_title%</h3>
+                    <p>%services_section_service1_description%</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon"></div>
+                    <h3>%services_section_service2_title%</h3>
+                    <p>%services_section_service2_description%</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon"></div>
+                    <h3>%services_section_service3_title%</h3>
+                    <p>%services_section_service3_description%</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon"></div>
+                    <h3>%services_section_service4_title%</h3>
+                    <p>%services_section_service4_description%</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon"></div>
+                    <h3>%services_section_service5_title%</h3>
+                    <p>%services_section_service5_description%</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon"></div>
+                    <h3>%services_section_service6_title%</h3>
+                    <p>%services_section_service6_description%</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-image-showcase" id="section-image-showcase">
+        <div class="container">
+            <div class="showcase-grid">
+                <div class="showcase-image"><img url="%mission_section_large_image_placeholder%"/></div>
+                <div class="showcase-content">
+                    <h2>%mission_section_headline%</h2>
+                    <p>%mission_section_paragraph_1%</p>
+                    <p>%mission_section_paragraph_2%</p>
+                    <p>%about_section_commitment_paragraph_2%</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-stats" id="section-stats">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">%stats_section_years_experience_number%</div>
+                    <div class="stat-label">%stats_section_years_experience_label%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">%stats_section_aum_number%</div>
+                    <div class="stat-label">%stats_section_aum_label%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">%stats_section_families_served_number%</div>
+                    <div class="stat-label">%stats_section_families_served_label%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">%stats_section_retention_rate_number%</div>
+                    <div class="stat-label">%stats_section_retention_rate_label%</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-testimonials" id="section-testimonials">
+        <div class="container">
+            <div class="section-title">
+                <h2>%testimonials_section_headline%</h2>
+                <p>%testimonials_section_description%</p>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">%testimonials_section_featured_text%</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar"></div>
+                        <div class="author-info">
+                            <h4>%testimonials_section_featured_author_name%</h4>
+                            <p>%testimonials_section_featured_author_since%</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">%testimonials_section_testimonial_1_text%</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar"></div>
+                        <div class="author-info">
+                            <h4>%testimonials_section_testimonial_1_author_name%</h4>
+                            <p>%testimonials_section_testimonial_1_author_since%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-cta-final" id="section-cta-final">
+        <div class="container">
+            <div class="cta-final-content">
+                <h2>%cta_final_section_headline%</h2>
+                <p>%cta_final_section_description%</p>
+                <a href="#" class="btn-primary">%cta_final_section_cta_buttons_primary%</a>
+            </div>
+        </div>
+    </section>
+
+    <footer id="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <div style="width: 100px;">%footer_logo%</div>
+                    <p>%footer_description%</p>
+                </div>
+                <div class="footer-column">
+                    <h4>Services</h4>
+                    <ul>
+                        <li><a href="#">%services_section_service1_title%</a></li>
+                        <li><a href="#">%services_section_service2_title%</a></li>
+                        <li><a href="#">%services_section_service3_title%</a></li>
+                        <li><a href="#">%services_section_service4_title%</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#">%footer_company_about_us%</a></li>
+                        <li><a href="#">%footer_company_our_team%</a></li>
+                        <li><a href="#">%footer_company_insights%</a></li>
+                        <li><a href="#">%footer_company_contact%</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#">%footer_resources_privacy_policy%</a></li>
+                        <li><a href="#">%footer_resources_terms_of_service%</a></li>
+                        <li><a href="#">%footer_resources_form_adv%</a></li>
+                        <li><a href="#">Disclosures</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>%footer_disclaimer%</p>
+                <div class="footer-links">
+                    <a href="#">%footer_footer_links_privacy%</a>
+                    <a href="#">%footer_footer_links_terms%</a>
+                    <a href="#">%footer_footer_links_accessibility%</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const navMenu = document.getElementById('navMenu');
+            const servicesDropdown = document.getElementById('servicesDropdown');
+            const servicesDropdownContent = document.getElementById('servicesDropdownContent');
+            const header = document.querySelector('header');
+            let lastScrollTop = 0;
+
+            window.addEventListener('scroll', function() {
+                let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                
+         
+                if (scrollTop < 0) {
+                    scrollTop = 0;
+                }
+
+                if (scrollTop > lastScrollTop && scrollTop > 100) {
+                    // Scrolling down
+                    header.classList.add('header-hidden');
+                } else {
+                    // Scrolling up
+                    header.classList.remove('header-hidden');
+                }
+                lastScrollTop = scrollTop;
+            });
+
+            // Scroll Reveal Observer
+            const revealElements = document.querySelectorAll('.reveal, .hero-content h1, .hero-content p, .btn-primary, .hero-image, .intro-block, .section-title, .service-card, .showcase-content, .showcase-image, .stat-item, .testimonial-card, .cta-final-content');
+            
+            // Add reveal class initially
+            revealElements.forEach(el => el.classList.add('reveal'));
+
+            const revealObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        observer.unobserve(entry.target); // Only animate once
+                    }
+                });
+            }, {
+                root: null,
+                threshold: 0.1, // Trigger when 10% visible
+                rootMargin: "0px 0px -50px 0px"
+            });
+
+            revealElements.forEach(el => revealObserver.observe(el));
+
+            mobileMenuToggle.addEventListener('click', function() {
+                navMenu.classList.toggle('active');
+            });
+
+            servicesDropdown.addEventListener('click', function(e) {
+                e.preventDefault();
+                servicesDropdownContent.classList.toggle('active');
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!servicesDropdown.contains(e.target) && !servicesDropdownContent.contains(e.target)) {
+                    servicesDropdownContent.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
