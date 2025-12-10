@@ -295,12 +295,22 @@ if uploaded_file is not None:
             with st.spinner('Processing URLs... This may take a moment.'):
                 for i, url in enumerate(df['URLs']):
                     try:
-                        # Ensure URL has a scheme
-                        if not url.startswith(('http://', 'https://')):
+                        # Ensure URL has a scheme. Also handles empty rows in CSV.
+                        if not isinstance(url, str) or not url.strip():
+                            continue # Skip empty or invalid URL rows
+                        if not re.match(r'^(?:http|ftp)s?://', url):
                             url = 'https://' + url
 
-                        response = requests.get(url, timeout=10)
-                        response.raise_for_status()
+                        try:
+                            # First, try with HTTPS
+                            response = requests.get(url, timeout=10, verify=True)
+                            response.raise_for_status()
+                        except requests.exceptions.SSLError:
+                            # If SSL fails, fall back to HTTP
+                            st.warning(f"SSL error with {url}. Trying HTTP instead.")
+                            url = url.replace('https://', 'http://')
+                            response = requests.get(url, timeout=10)
+                            response.raise_for_status()
                         
                         html_content = response.text
                         
