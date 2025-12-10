@@ -7,6 +7,9 @@ import os
 import re
 import base64
 import openai
+import io
+import zipfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # --- Helper Functions from n8n workflow ---
 
@@ -127,19 +130,28 @@ def call_ai_agent(prompt, text, url, logo, title, api_key, model, dynamic_schema
             response_format={"type": "json_object"},
         )
         response_content = completion.choices[0].message.content
-        return json.loads(response_content)
+        try:
+            # First attempt to load directly
+            return json.loads(response_content)
+        except json.JSONDecodeError:
+            # If it fails, try to clean up control characters and re-parse
+            st.warning("AI response contained invalid characters. Attempting to clean and re-parse.")
+            # More aggressive cleaning
+            clean_response = ''.join(c for c in response_content if c.isprintable())
+            try:
+                return json.loads(clean_response)
+            except json.JSONDecodeError as e:
+                st.error(f"Failed to decode AI response even after cleaning: {e}")
+                st.text_area("Problematic AI Response:", clean_response)
+                return { "error": "AI response was not valid JSON." }
+
     except Exception as e:
-        st.error(f"Error calling AI Agent: {e}")
+        st.error(f"An unexpected error occurred while calling the AI Agent: {e}")
         return {
             "header": {"logo": logo, "nav_menu": {}},
-            "hero_section": {"headline": f"Error generating headline for {title}"},
-            "about_section": {},
-            "services_section": {},
-            "mission_section": {},
-            "stats_section": {},
-            "testimonials_section": {},
-            "cta_final_section": {},
-            "footer": {}
+            "hero_section": {"headline": f"Error generating content for {title}"},
+            "about_section": {}, "services_section": {}, "mission_section": {},
+            "stats_section": {}, "testimonials_section": {}, "cta_final_section": {}, "footer": {}
         }
 
 
@@ -284,139 +296,178 @@ with col2:
 if uploaded_file is not None:
     try:
         df = pd.read_csv(uploaded_file)
-
-        if 'URLs' in df.columns:
-            st.header("2. Processing and Results")
-            total_urls = len(df['URLs'])
-            st.info(f"Found {total_urls} URL(s) to process.")
-            
-            results = []
-            
-            with st.spinner('Processing URLs... This may take a moment.'):
-                for i, url in enumerate(df['URLs']):
-                    try:
-                        # Ensure URL has a scheme. Also handles empty rows in CSV.
-                        if not isinstance(url, str) or not url.strip():
-                            continue # Skip empty or invalid URL rows
-                        if not re.match(r'^(?:http|ftp)s?://', url):
-                            url = 'https://' + url
-
-                        try:
-                            # First, try with HTTPS
-                            response = requests.get(url, timeout=10, verify=True)
-                            response.raise_for_status()
-                        except requests.exceptions.SSLError:
-                            # If SSL fails, fall back to HTTP
-                            st.warning(f"SSL error with {url}. Trying HTTP instead.")
-                            url = url.replace('https://', 'http://')
-                            response = requests.get(url, timeout=10)
-                            response.raise_for_status()
-                        
-                        html_content = response.text
-                        
-                        # 1. Extract Logo and Text
-                        extracted_data = extract_logo_and_text(html_content, url)
-                        if extracted_data["error"]:
-                            st.error(f"Could not process {url}: {extracted_data['text']}")
-                            continue
-
-                        # 2. AI Agent Analysis
-                        placeholders = get_placeholders(html_template)
-                        dynamic_schema = create_dynamic_schema(placeholders)
-
-                        ai_prompt_1 = "You are an expert web page analyzer. Your task is to extract key information from the provided web page content and populate a JSON object. Focus on understanding the business, its services, and its mission."
-                        
-                        generated_content_1 = call_ai_agent(
-                            ai_prompt_1,
-                            extracted_data["text"],
-                            url,
-                            extracted_data["logo"],
-                            extracted_data["title"],
-                            openrouter_api_key,
-                            selected_model,
-                            dynamic_schema
-                        )
-
-                        ai_prompt_2 = "You are an expert marketing analyst. Your task is to generate the missing information based on what you have from the given website, and what you know is going to work for the new website. Fill in any empty fields in the provided JSON object to create a complete, marketing-focused content set."
-                        
-                        prompt_2_with_context = f"{ai_prompt_2}\n\nHere is the partially filled JSON from the first analysis:\n{json.dumps(generated_content_1, indent=2)}"
-
-                        generated_content_2 = call_ai_agent(
-                            prompt_2_with_context,
-                            extracted_data["text"],
-                            url,
-                            extracted_data["logo"],
-                            extracted_data["title"],
-                            openrouter_api_key,
-                            selected_model,
-                            dynamic_schema
-                        )
-                        
-                        generated_content = deep_merge(generated_content_1, generated_content_2)
-                        
-                        final_html = replace_placeholders(html_template, generated_content)
-                        
-                        try:
-                            from urllib.parse import urlparse
-                            parsed_url = urlparse(url)
-                            domain = parsed_url.netloc.replace('www.', '')
-                            file_name_base = domain.split('.')[0]
-                            file_name = f"{file_name_base}.html"
-                        except:
-                            file_name = "download.html"
-
-                        results.append({
-                            'URL': url,
-                            'GeneratedHTML': final_html,
-                            'FileName': file_name,
-                            'Logo': extracted_data.get('logo', ''),
-                            'Title': extracted_data.get('title', ''),
-                        })
-
-                    except requests.exceptions.RequestException as e:
-                        st.error(f"Failed to fetch {url}: {e}")
-                    except Exception as e:
-                        st.error(f"An error occurred while processing {url}: {e}")
-
-            if results:
-                st.success("Processing complete!")
-                st.header("3. Download Your Files")
-                
-                result_df = pd.DataFrame(results)
-
-                # Create a two-column layout for the download buttons
-                col1, col2 = st.columns(2)
-                
-                for index, row in result_df.iterrows():
-                    if index % 2 == 0:
-                        with col1:
-                            st.download_button(
-                                label=f"Download {row['FileName']}",
-                                data=row['GeneratedHTML'],
-                                file_name=row['FileName'],
-                                mime='text/html',
-                                use_container_width=True
-                            )
-                    else:
-                        with col2:
-                            st.download_button(
-                                label=f"Download {row['FileName']}",
-                                data=row['GeneratedHTML'],
-                                file_name=row['FileName'],
-                                mime='text/html',
-                                use_container_width=True
-                            )
-                
-                # Provide a separate download for the summary CSV
-                csv_summary = result_df[['URL', 'Title', 'Logo']].to_csv(index=False).encode('utf-8')
-                st.sidebar.download_button(
-                    label="Download Summary CSV",
-                    data=csv_summary,
-                    file_name='summary.csv',
-                    mime='text/csv',
-                )
-
-        else:
-            st.error("The uploaded CSV file must contain a 'URLs' column.")
     except Exception as e:
-        st.error(f"An error occurred: {e}")
+        st.error(f"Could not read the CSV file. Please ensure it's correctly formatted. Error: {e}")
+        st.stop()
+
+    def process_url(url, html_template, openrouter_api_key, selected_model):
+        """Processes a single URL: fetches, analyzes, and generates content."""
+        try:
+            # Ensure URL has a scheme. Also handles empty rows in CSV.
+            if not isinstance(url, str) or not url.strip():
+                return None # Skip empty or invalid URL rows
+            if not re.match(r'^(?:http|ftp)s?://', url):
+                url = 'https://' + url
+
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            try:
+                # First, try with HTTPS
+                response = requests.get(url, headers=headers, timeout=10, verify=True)
+                response.raise_for_status()
+            except requests.exceptions.SSLError:
+                # If SSL fails, fall back to HTTP
+                st.warning(f"SSL error with {url}. Trying HTTP instead.")
+                url = url.replace('https://', 'http://')
+                response = requests.get(url, headers=headers, timeout=10)
+                response.raise_for_status()
+            
+            html_content = response.text
+            
+            # 1. Extract Logo and Text
+            extracted_data = extract_logo_and_text(html_content, url)
+            if extracted_data["error"]:
+                st.error(f"Could not process {url}: {extracted_data['text']}")
+                return None
+
+            # 2. AI Agent Analysis
+            placeholders = get_placeholders(html_template)
+            dynamic_schema = create_dynamic_schema(placeholders)
+
+            ai_prompt_1 = "You are an expert web page analyzer. Your task is to extract key information from the provided web page content and populate a JSON object. Focus on understanding the business, its services, and its mission."
+            
+            generated_content_1 = call_ai_agent(
+                ai_prompt_1,
+                extracted_data["text"],
+                url,
+                extracted_data["logo"],
+                extracted_data["title"],
+                openrouter_api_key,
+                selected_model,
+                dynamic_schema
+            )
+
+            ai_prompt_2 = "You are an expert marketing analyst. Your task is to generate the missing information based on what you have from the given website, and what you know is going to work for the new website. Fill in any empty fields in the provided JSON object to create a complete, marketing-focused content set."
+            
+            prompt_2_with_context = f"{ai_prompt_2}\n\nHere is the partially filled JSON from the first analysis:\n{json.dumps(generated_content_1, indent=2)}"
+
+            generated_content_2 = call_ai_agent(
+                prompt_2_with_context,
+                extracted_data["text"],
+                url,
+                extracted_data["logo"],
+                extracted_data["title"],
+                openrouter_api_key,
+                selected_model,
+                dynamic_schema
+            )
+            
+            generated_content = deep_merge(generated_content_1, generated_content_2)
+            
+            final_html = replace_placeholders(html_template, generated_content)
+            
+            try:
+                from urllib.parse import urlparse
+                parsed_url = urlparse(url)
+                domain = parsed_url.netloc.replace('www.', '')
+                file_name_base = domain.split('.')[0]
+                file_name = f"{file_name_base}.html"
+            except:
+                file_name = "download.html"
+
+            return {
+                'URL': url,
+                'GeneratedHTML': final_html,
+                'FileName': file_name,
+                'Logo': extracted_data.get('logo', ''),
+                'Title': extracted_data.get('title', ''),
+            }
+
+        except requests.exceptions.RequestException as e:
+            st.error(f"Failed to fetch {url}: {e}")
+            return None
+        except Exception as e:
+            st.error(f"An error occurred while processing {url}: {e}")
+            return None
+
+    if 'URLs' in df.columns:
+        st.header("2. Processing and Results")
+        urls = df['URLs'].dropna().unique().tolist()
+        total_urls = len(urls)
+        st.info(f"Found {total_urls} unique URL(s) to process.")
+        
+        results = []
+        
+        with st.spinner('Processing URLs in parallel... This may take a moment.'):
+            with ThreadPoolExecutor(max_workers=5) as executor:
+                future_to_url = {executor.submit(process_url, url, html_template, openrouter_api_key, selected_model): url for url in urls}
+                
+                progress_bar = st.progress(0)
+                completed_count = 0
+
+                for future in as_completed(future_to_url):
+                    result = future.result()
+                    if result:
+                        results.append(result)
+                    
+                    completed_count += 1
+                    progress_bar.progress(completed_count / total_urls)
+
+        if results:
+            st.success("Processing complete!")
+            st.header("3. Download Your Files")
+            
+            result_df = pd.DataFrame(results)
+
+            # --- Create ZIP file in memory ---
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+                for index, row in result_df.iterrows():
+                    zip_file.writestr(row['FileName'], row['GeneratedHTML'])
+            
+            st.download_button(
+                label="📥 Download All as ZIP",
+                data=zip_buffer.getvalue(),
+                file_name="generated_websites.zip",
+                mime="application/zip",
+                use_container_width=True
+            )
+
+            st.markdown("---")
+            st.markdown("### Individual Downloads")
+
+            # Create a two-column layout for the download buttons
+            col1, col2 = st.columns(2)
+            
+            for index, row in result_df.iterrows():
+                if index % 2 == 0:
+                    with col1:
+                        st.download_button(
+                            label=f"Download {row['FileName']}",
+                            data=row['GeneratedHTML'],
+                            file_name=row['FileName'],
+                            mime='text/html',
+                            use_container_width=True
+                        )
+                else:
+                    with col2:
+                        st.download_button(
+                            label=f"Download {row['FileName']}",
+                            data=row['GeneratedHTML'],
+                            file_name=row['FileName'],
+                            mime='text/html',
+                            use_container_width=True
+                        )
+            
+            # Provide a separate download for the summary CSV
+            csv_summary = result_df[['URL', 'Title', 'Logo']].to_csv(index=False).encode('utf-8')
+            st.sidebar.download_button(
+                label="Download Summary CSV",
+                data=csv_summary,
+                file_name='summary.csv',
+                mime='text/csv',
+            )
+
+    else:
+        st.error("The uploaded CSV file must contain a 'URLs' column.")
